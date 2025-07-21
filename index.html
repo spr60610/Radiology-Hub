@@ -177,48 +177,295 @@
 <div id="darkModeToggle" onclick="toggleDarkMode()">🌓</div>
 
 <script>
-function showSection(sectionId) {
-    const sections = ['dashboard', 'guidelines', 'learning', 'ai'];
-    sections.forEach(id => {
-        document.getElementById(id).style.display = (id === sectionId) ? 'block' : 'none';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radiology Hub</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 0;
+    }
+    header {
+        background-color: #004080;
+        color: #fff;
+        text-align: center;
+        padding: 15px;
+        font-size: 1.8em;
+    }
+    .tab-container {
+        width: 95%;
+        max-width: 1000px;
+        margin: 20px auto;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        border-bottom: 2px solid #ddd;
+        justify-content: space-around;
+    }
+    .tab {
+        padding: 12px 20px;
+        cursor: pointer;
+        font-weight: bold;
+        color: #004080;
+        text-align: center;
+    }
+    .tab.active {
+        border-bottom: 3px solid #004080;
+        color: #000;
+    }
+    .tab-content {
+        display: none;
+        padding: 20px;
+    }
+    .tab-content.active {
+        display: block;
+    }
+    h2 {
+        color: #004080;
+        margin-bottom: 15px;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    input[type="number"], select {
+        width: 100%;
+        padding: 10px;
+        font-size: 1em;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+    }
+    button {
+        width: 100%;
+        padding: 12px;
+        background-color: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 1.1em;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #004080;
+    }
+    .result {
+        margin-top: 20px;
+        padding: 10px;
+        background: #f1f1f1;
+        border-radius: 6px;
+        text-align: center;
+        font-size: 1.1em;
+    }
+    .macro-card {
+        background: #f9f9f9;
+        border: 1px solid #ccc;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    .macro-header {
+        font-weight: bold;
+        font-size: 1.2em;
+        color: #004080;
+        margin-bottom: 10px;
+    }
+    button.copy-btn {
+        background-color: #0066cc;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+    button.copy-btn:hover {
+        background-color: #004080;
+    }
+</style>
+</head>
+<body>
+
+<header>Radiology Reporting Hub</header>
+
+<div class="tab-container">
+    <!-- Tabs -->
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab(event, 'calc')">Calculators</div>
+        <div class="tab" onclick="switchTab(event, 'macros')">Reporting Macros</div>
+    </div>
+
+    <!-- CALCULATORS TAB -->
+    <div id="calc" class="tab-content active">
+        <h2>Calculators</h2>
+
+        <!-- Prostate Volume -->
+        <div style="border-bottom:1px solid #ccc; padding-bottom:15px; margin-bottom:15px;">
+            <h3>Prostate Volume & PSA Density</h3>
+            <div class="form-group"><label>Length (cm):</label><input type="number" id="length" step="0.1"></div>
+            <div class="form-group"><label>Width (cm):</label><input type="number" id="width" step="0.1"></div>
+            <div class="form-group"><label>Height (cm):</label><input type="number" id="height" step="0.1"></div>
+            <div class="form-group"><label>PSA (ng/mL):</label><input type="number" id="psa" step="0.01"></div>
+            <button onclick="calculateProstate()">Calculate</button>
+            <div class="result" id="result-prostate"></div>
+        </div>
+
+        <!-- TI-RADS -->
+        <div style="border-bottom:1px solid #ccc; padding-bottom:15px; margin-bottom:15px;">
+            <h3>TI-RADS Score (Simplified)</h3>
+            <div class="form-group"><label>Points:</label>
+            <select id="tirads">
+                <option value="0">Select...</option>
+                <option value="TR1">0 pts (TR1 - Benign)</option>
+                <option value="TR2">2 pts (TR2 - Not Suspicious)</option>
+                <option value="TR3">3 pts (TR3 - Mildly Suspicious)</option>
+                <option value="TR4">4-6 pts (TR4 - Moderately Suspicious)</option>
+                <option value="TR5">≥7 pts (TR5 - Highly Suspicious)</option>
+            </select>
+            </div>
+            <div class="result" id="result-tirads">Select a score above to view TI-RADS category.</div>
+        </div>
+
+        <!-- SUV Change -->
+        <div style="border-bottom:1px solid #ccc; padding-bottom:15px; margin-bottom:15px;">
+            <h3>SUV Change (%)</h3>
+            <div class="form-group"><label>Baseline SUV:</label><input type="number" id="suv1" step="0.01"></div>
+            <div class="form-group"><label>Follow-up SUV:</label><input type="number" id="suv2" step="0.01"></div>
+            <button onclick="calculateSUV()">Calculate</button>
+            <div class="result" id="result-suv"></div>
+        </div>
+
+        <!-- Tumor Growth -->
+        <div>
+            <h3>Tumor Volume Growth</h3>
+            <div class="form-group"><label>Volume 1 (mL):</label><input type="number" id="vol1" step="0.1"></div>
+            <div class="form-group"><label>Volume 2 (mL):</label><input type="number" id="vol2" step="0.1"></div>
+            <div class="form-group"><label>Time Interval (days):</label><input type="number" id="days" step="1"></div>
+            <button onclick="calculateGrowth()">Calculate</button>
+            <div class="result" id="result-growth"></div>
+        </div>
+    </div>
+
+    <!-- MACROS TAB -->
+    <div id="macros" class="tab-content">
+        <h2>Reporting Macros</h2>
+
+        <div class="macro-card">
+            <div class="macro-header">Pancreatic Cancer</div>
+            <div class="macro-content">Pancreatic head mass measuring ___ x ___ cm, hypoenhancing relative to pancreas on arterial and venous phases.
+Main pancreatic duct: __ mm. Common bile duct: __ mm.
+Vascular involvement: SMA (___), SMV (___), Celiac axis (___).
+No distant metastases. Impression: Pancreatic adenocarcinoma, stage ___.</div>
+            <button class="copy-btn" onclick="copyMacro(this)">Copy</button>
+        </div>
+
+        <div class="macro-card">
+            <div class="macro-header">Endometriosis</div>
+            <div class="macro-content">Uterus: Normal size and contour.
+Ovaries: (normal / endometriomas).
+Deep endometriosis: (present/absent).
+Sites: Uterosacral ligament, rectovaginal septum, bladder.
+No pelvic lymphadenopathy.</div>
+            <button class="copy-btn" onclick="copyMacro(this)">Copy</button>
+        </div>
+
+        <div class="macro-card">
+            <div class="macro-header">Prostate MRI (PI-RADS)</div>
+            <div class="macro-content">Prostate size: ___ mL.
+Lesion: location ___, size ___ mm.
+T2: ___; DWI/ADC: ___; DCE: ___.
+PI-RADS ___.
+No EPE, no seminal vesicle invasion, no nodes.</div>
+            <button class="copy-btn" onclick="copyMacro(this)">Copy</button>
+        </div>
+
+        <div class="macro-card">
+            <div class="macro-header">Rectal MRI Staging</div>
+            <div class="macro-content">Tumor ___ cm from anal verge.
+T-stage: ___; CRM: ___; EMVI: ___.
+Nodes: ___.
+Impression: Rectal cancer T___ N___. CRM ___.</div>
+            <button class="copy-btn" onclick="copyMacro(this)">Copy</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchTab(evt, tabId) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+
+    function calculateProstate() {
+        let length = parseFloat(document.getElementById('length').value);
+        let width = parseFloat(document.getElementById('width').value);
+        let height = parseFloat(document.getElementById('height').value);
+        let psa = parseFloat(document.getElementById('psa').value);
+        if (isNaN(length) || isNaN(width) || isNaN(height)) {
+            document.getElementById('result-prostate').innerHTML = "Please enter all dimensions.";
+            return;
+        }
+        let volume = 0.52 * length * width * height;
+        let psaDensity = psa && psa > 0 ? (psa / volume) : null;
+        let output = `<strong>Volume:</strong> ${volume.toFixed(2)} mL`;
+        if (psaDensity) output += `<br><strong>PSA Density:</strong> ${psaDensity.toFixed(3)}`;
+        document.getElementById('result-prostate').innerHTML = output;
+    }
+
+    document.getElementById('tirads').addEventListener('change', function() {
+        document.getElementById('result-tirads').innerHTML = `<strong>TI-RADS Category:</strong> ${this.value}`;
     });
-}
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-}
-function sendAIMessage() {
-    const input = document.getElementById('aiInput');
-    const chatBox = document.getElementById('aiChatBox');
-    if (input.value.trim()) {
-        chatBox.innerHTML += '<div><b>You:</b> ' + input.value + '</div>';
-        chatBox.innerHTML += '<div><b>AI:</b> (Placeholder response)</div>';
-        input.value = '';
-        chatBox.scrollTop = chatBox.scrollHeight;
+
+    function calculateSUV() {
+        let suv1 = parseFloat(document.getElementById('suv1').value);
+        let suv2 = parseFloat(document.getElementById('suv2').value);
+        if (isNaN(suv1) || isNaN(suv2) || suv1 <= 0) {
+            document.getElementById('result-suv').innerHTML = "Enter valid SUV values.";
+            return;
+        }
+        let change = ((suv2 - suv1) / suv1) * 100;
+        let status = change >= 30 ? "Progression" : (change <= -30 ? "Response" : "Stable");
+        document.getElementById('result-suv').innerHTML = `SUV Change: ${change.toFixed(1)}% (${status})`;
     }
-}
-function calcTIRADS() {
-    const comp = parseInt(document.getElementById('composition').value);
-    const echo = parseInt(document.getElementById('echogenicity').value);
-    const score = comp + echo;
-    let category = 'TI-RADS ' + (score <= 2 ? '2 (Benign)' : score <= 4 ? '3 (Low Risk)' : '4-5 (Suspicious)');
-    document.getElementById('tiradsResult').textContent = 'Score: ' + score + ' → ' + category;
-}
-function calcSUV() {
-    const suv1 = parseFloat(document.getElementById('suv1').value);
-    const suv2 = parseFloat(document.getElementById('suv2').value);
-    if (suv1 && suv2) {
-        const change = ((suv2 - suv1) / suv1 * 100).toFixed(2);
-        document.getElementById('suvResult').textContent = 'SUV Change: ' + change + '%';
+
+    function calculateGrowth() {
+        let v1 = parseFloat(document.getElementById('vol1').value);
+        let v2 = parseFloat(document.getElementById('vol2').value);
+        let days = parseFloat(document.getElementById('days').value);
+        if (isNaN(v1) || isNaN(v2) || isNaN(days) || v1 <= 0 || v2 <= 0) {
+            document.getElementById('result-growth').innerHTML = "Enter valid values.";
+            return;
+        }
+        let growthRate = ((v2 - v1) / v1) * 100;
+        let doublingTime = (Math.log(2) * days) / (Math.log(v2 / v1));
+        document.getElementById('result-growth').innerHTML = `Growth: ${growthRate.toFixed(1)}% <br> Doubling Time: ${doublingTime.toFixed(1)} days`;
     }
-}
-function calcVolume() {
-    const v1 = parseFloat(document.getElementById('vol1').value);
-    const v2 = parseFloat(document.getElementById('vol2').value);
-    if (v1 && v2) {
-        const change = ((v2 - v1) / v1 * 100).toFixed(2);
-        document.getElementById('volResult').textContent = 'Volume Change: ' + change + '%';
+
+    function copyMacro(btn) {
+        let text = btn.previousElementSibling.innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = "Copied!";
+            setTimeout(() => btn.textContent = "Copy", 2000);
+        });
     }
-}
+</script>
+
+</body>
+</html>
+
 </script>
 
 </body>
